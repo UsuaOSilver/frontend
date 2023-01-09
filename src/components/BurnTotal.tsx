@@ -1,6 +1,6 @@
 import * as DateFns from "date-fns";
-import type { StaticImageData } from "next/image";
-import Image from "next/image";
+import type { StaticImageData } from "next/legacy/image";
+import Image from "next/legacy/image";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
@@ -13,9 +13,9 @@ import fireSvg from "../assets/fire-own.svg";
 import { londonHardFork } from "../dates";
 import type { Unit } from "../denomination";
 import * as Duration from "../duration";
+import { usePosIssuancePerDay } from "../eth-units";
 import * as Format from "../format";
-import * as StaticEtherData from "../static-ether-data";
-import type { LimitedTimeFrameNext, TimeFrameNext } from "../time-frames";
+import type { LimitedTimeFrame, TimeFrameNext } from "../time-frames";
 import { AmountAnimatedShell } from "./Amount";
 import { BaseText } from "./Texts";
 import TimeFrameIndicator from "./TimeFrameIndicator";
@@ -31,7 +31,7 @@ const timeframeFeesBurnedMap: Record<
   d1: { eth: "feesBurned24h", usd: "feesBurned24hUsd" },
   d7: { eth: "feesBurned7d", usd: "feesBurned7dUsd" },
   d30: { eth: "feesBurned30d", usd: "feesBurned30dUsd" },
-  all: { eth: "feesBurnedAll", usd: "feesBurnedAllUsd" },
+  since_burn: { eth: "feesBurnedAll", usd: "feesBurnedAllUsd" },
 };
 
 export const timeframeBurnRateMap: Record<
@@ -43,10 +43,10 @@ export const timeframeBurnRateMap: Record<
   d1: { eth: "burnRate24h", usd: "burnRate24hUsd" },
   d7: { eth: "burnRate7d", usd: "burnRate7dUsd" },
   d30: { eth: "burnRate30d", usd: "burnRate30dUsd" },
-  all: { eth: "burnRateAll", usd: "burnRateAllUsd" },
+  since_burn: { eth: "burnRateAll", usd: "burnRateAllUsd" },
 };
 
-const timeFrameMillisecondsMap: Record<LimitedTimeFrameNext, number> = {
+const timeFrameMillisecondsMap: Record<LimitedTimeFrame, number> = {
   d30: Duration.millisFromDays(30),
   d7: Duration.millisFromDays(7),
   d1: Duration.millisFromHours(24),
@@ -70,6 +70,7 @@ const BurnTotal: FC<Props> = ({ onClickTimeFrame, timeFrame, unit }) => {
   const feesBurned = groupedAnalysis1?.feesBurned;
   const [millisecondsSinceLondonHardFork, setMillisecondsSinceLondonHardfork] =
     useState<number>();
+  const posIssuancePerDay = usePosIssuancePerDay();
 
   const selectedFeesBurnedEth =
     feesBurned === undefined
@@ -92,8 +93,7 @@ const BurnTotal: FC<Props> = ({ onClickTimeFrame, timeFrame, unit }) => {
       ? burnRates[timeframeBurnRateMap[timeFrame][unit]]
       : burnRates[timeframeBurnRateMap[timeFrame][unit]];
 
-  const issuancePerMillisecond =
-    StaticEtherData.posIssuancePerDay / Duration.millisFromDays(1);
+  const issuancePerMillisecond = posIssuancePerDay / Duration.millisFromDays(1);
 
   useEffect(() => {
     setMillisecondsSinceLondonHardfork(
@@ -105,7 +105,7 @@ const BurnTotal: FC<Props> = ({ onClickTimeFrame, timeFrame, unit }) => {
   const selectedIssuance =
     millisecondsSinceLondonHardFork === undefined
       ? undefined
-      : timeFrame === "all"
+      : timeFrame === "since_burn"
       ? issuancePerMillisecond * millisecondsSinceLondonHardFork
       : issuancePerMillisecond * timeFrameMillisecondsMap[timeFrame];
 
@@ -120,10 +120,11 @@ const BurnTotal: FC<Props> = ({ onClickTimeFrame, timeFrame, unit }) => {
       <WidgetBackground className="relative overflow-hidden">
         <div
           className={`
-            top-15 pointer-events-none absolute -left-20
-            h-full w-full
-            opacity-[0.13]
-            blur-[50px] will-change-transform
+            top-15 pointer-events-none
+            absolute -left-20 h-full
+            w-full opacity-[0.13]
+            blur-[50px]
+            will-change-transform
             md:top-20
             md:blur-[70px]
           `}
@@ -139,11 +140,11 @@ const BurnTotal: FC<Props> = ({ onClickTimeFrame, timeFrame, unit }) => {
         </div>
         <div
           className={`
-            pointer-events-none absolute top-0 -left-20
-            h-full w-full
-            opacity-[0.25]
-            blur-[50px] will-change-transform
-            md:top-5
+            pointer-events-none absolute
+            top-0 -left-20 h-full
+            w-full opacity-[0.25]
+            blur-[50px]
+            will-change-transform md:top-5
             md:blur-[70px]
           `}
         >

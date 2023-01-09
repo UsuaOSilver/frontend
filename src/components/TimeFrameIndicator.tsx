@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { londonHardFork } from "../dates";
 import { millisFromHours } from "../duration";
 import type { TimeFrameNext } from "../time-frames";
-import { displayTimeFrameNextMap } from "../time-frames";
+import { displayLimitedTimeFrameMap } from "../time-frames";
 import LabelText from "./TextsNext/LabelText";
+import HoverTooltip from "./HoverTooltip";
 
 const getFormattedDays = (now: Date) => {
   const daysCount = differenceInDays(now, londonHardFork);
@@ -36,18 +37,28 @@ const TimeFrameIndicator: FC<Props> = ({
   }, []);
 
   return (
-    <button
-      className={`flex items-baseline gap-x-2 ${className}`}
-      onClick={onClickTimeFrame}
-      title="since London hark fork where EIP-1559 was activated"
+    <HoverTooltip
+      zLevel="z-30"
+      text={
+        timeFrame === "since_burn"
+          ? "since London hark fork where EIP-1559 was activated"
+          : undefined
+      }
     >
-      <LabelText>{timeFrame === "all" ? "since burn" : "time frame"}</LabelText>
-      <p className="font-roboto text-xs font-light text-white">
-        {timeFrame === "all"
-          ? daysSinceLondon
-          : displayTimeFrameNextMap[timeFrame]}
-      </p>
-    </button>
+      <button
+        className={`flex items-baseline gap-x-2 ${className}`}
+        onClick={onClickTimeFrame}
+      >
+        <LabelText>
+          {timeFrame === "since_burn" ? "since burn" : "time frame"}
+        </LabelText>
+        <p className="font-roboto text-xs text-white">
+          {timeFrame === "since_burn"
+            ? daysSinceLondon
+            : displayLimitedTimeFrameMap[timeFrame]}
+        </p>
+      </button>
+    </HoverTooltip>
   );
 };
 

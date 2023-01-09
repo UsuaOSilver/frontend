@@ -11,14 +11,16 @@ import TimeFrameControl from "./TimeFrameControl";
 import ToggleSwitch from "./ToggleSwitch";
 import { WidgetTitle } from "./WidgetSubcomponents";
 
-const Controls: FC<{
+type Props = {
   timeFrame: TimeFrameNext;
   onSetTimeFrame: (timeFrame: TimeFrameNext) => void;
   simulateProofOfWork: boolean;
   onSimulateProofOfWork: () => void;
   unit: Unit;
   onSetUnit: (unit: Unit) => void;
-}> = ({
+};
+
+const Controls: FC<Props> = ({
   onSetTimeFrame,
   onSetUnit,
   onSimulateProofOfWork: onToggleSimulateProofOfWork,
@@ -26,7 +28,7 @@ const Controls: FC<{
   timeFrame,
   unit,
 }) => (
-  <div className={`rounded-bl-lg rounded-br-lg bg-blue-tangaroa p-8`}>
+  <div className={`rounded-bl-lg rounded-br-lg bg-slateus-700 px-8 pb-8`}>
     <div className="grid grid-cols-2 flex-col gap-y-8 md:flex md:flex-row md:justify-between lg:gap-y-0 ">
       <div className="row-start-1 flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-x-4">
         <WidgetTitle>time frame</WidgetTitle>

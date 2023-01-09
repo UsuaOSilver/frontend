@@ -25,7 +25,7 @@ const feePeriodToUpdateMap: Record<TimeFrameNext, keyof Leaderboards> = {
   d1: "leaderboard24h",
   d7: "leaderboard7d",
   d30: "leaderboard30d",
-  all: "leaderboardAll",
+  since_burn: "leaderboardAll",
 };
 
 const formatName = (rawName: unknown, address: unknown) => {

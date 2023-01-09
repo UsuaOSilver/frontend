@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useCallback, useState } from "react";
 import type { Unit } from "../../denomination";
 import type { TimeFrameNext } from "../../time-frames";
-import { getNextTimeFrame } from "../../time-frames";
+import { getNextTimeFrameNext } from "../../time-frames";
 import BasicErrorBoundary from "../BasicErrorBoundary";
 import BurnCategoryWidget from "../BurnCategoryWidget";
 import BurnLeaderboard from "../BurnLeaderboard";
@@ -23,7 +23,7 @@ const BurnSection: FC = () => {
   const onSetUnit = useCallback(setUnit, [setUnit]);
 
   const handleClickTimeFrame = useCallback(() => {
-    setTimeFrame((timeFrame) => getNextTimeFrame(timeFrame));
+    setTimeFrame((timeFrame) => getNextTimeFrameNext(timeFrame));
   }, []);
 
   return (
@@ -31,11 +31,11 @@ const BurnSection: FC = () => {
       <SectionDivider
         link="burn"
         subtitle="it's getting hot in here"
-        title="the burn"
+        title="burn"
       />
       <BasicErrorBoundary>
         <div className="flex flex-col gap-4 xs:px-4 md:px-16 ">
-          <div className={`rounded-lg bg-blue-tangaroa p-8`}>
+          <div className={`rounded-lg bg-slateus-700 p-8`}>
             <div className="grid grid-cols-2 flex-col gap-y-8 md:flex md:flex-row md:justify-between lg:gap-y-0 ">
               <div className="row-start-1 flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-x-4">
                 <WidgetTitle>time frame</WidgetTitle>

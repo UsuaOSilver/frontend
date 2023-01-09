@@ -5,23 +5,26 @@ import { useAverageEthPrice } from "../api/average-eth-price";
 import { useBurnRates } from "../api/burn-rates";
 import { useEthPriceStats } from "../api/eth-price-stats";
 import { useImpreciseEthSupply } from "../api/eth-supply";
+import type { PeRatios } from "../api/pe-ratios";
 import { usePeRatios } from "../api/pe-ratios";
+import { usePosIssuanceYear } from "../eth-units";
 import * as Format from "../format";
-import * as StaticEtherData from "../static-ether-data";
 import { MoneyAmount } from "./Amount";
 import Slider2 from "./Slider2";
 import { BaseText } from "./Texts";
 import BodyText from "./TextsNext/BodyText";
 import { WidgetBackground, WidgetTitle } from "./WidgetSubcomponents";
 
-// Markers are positioned absolutely, manipulating their 'left' relatively to the full width bar which should be positioned relatively as their parent. Marker width
-const Marker: FC<{
+type MarkerProps = {
   alt?: string;
   icon: string;
-  peRatio: number | undefined;
+  peRatio: number;
   ratio: number;
   symbol?: string;
-}> = ({ alt, icon, peRatio, ratio, symbol }) => {
+};
+
+// Markers are positioned absolutely, manipulating their 'left' relatively to the full width bar which should be positioned relatively as their parent. Marker width
+const Marker: FC<MarkerProps> = ({ alt, icon, peRatio, ratio, symbol }) => {
   const [isHovering, setIsHovering] = useState(false);
 
   return (
@@ -31,7 +34,7 @@ const Marker: FC<{
         transform: `translateX(${ratio * 100}%)`,
       }}
     >
-      <div className="mb-3 w-3 -translate-x-1/2 bg-blue-shipcove [min-height:3px]"></div>
+      <div className="mb-3 w-3 -translate-x-1/2 bg-slateus-400 [min-height:3px]"></div>
       <a
         title={`${peRatio?.toFixed(1) ?? "-"} P/E`}
         className="pointer-events-auto absolute top-4 -translate-x-1/2"
@@ -73,7 +76,7 @@ const MarkerText: FC<{ children: ReactNode; ratio: number }> = ({
     // For unclear reasons the left 89% position for TSLA is closer to notch 91 on the actual slider. We manually adjust.
     style={{ transform: `translateX(${ratio * 100}%)` }}
   >
-    <div className="w-3 -translate-x-1/2 bg-blue-shipcove [min-height:3px]"></div>
+    <div className="w-3 -translate-x-1/2 bg-slateus-400 [min-height:3px]"></div>
     <BaseText
       font="font-roboto"
       color="text-slateus-200"
@@ -83,6 +86,99 @@ const MarkerText: FC<{ children: ReactNode; ratio: number }> = ({
     </BaseText>
   </div>
 );
+
+const CompanyMarkers: FC<{ peRatios: PeRatios & { ETH: number } }> = ({
+  peRatios,
+}) => {
+  const markerList: MarkerProps[] = [
+    {
+      alt: "ethereum logo",
+      icon: "eth",
+      peRatio: peRatios.ETH,
+      ratio: peRatios.ETH,
+      symbol: "ETH",
+    },
+    {
+      alt: "apple logo",
+      icon: "apple",
+      peRatio: peRatios.AAPL,
+      ratio: peRatios.AAPL,
+      symbol: "AAPL",
+    },
+    {
+      alt: "amazon logo",
+      icon: "amazon",
+      peRatio: peRatios.AMZN,
+      ratio: peRatios.AMZN,
+      symbol: "AMZN",
+    },
+    {
+      alt: "tesla logo",
+      icon: "tesla",
+      peRatio: peRatios.TSLA,
+      ratio: peRatios.TSLA,
+      symbol: "TSLA",
+    },
+    {
+      alt: "disney logo",
+      icon: "disney",
+      peRatio: peRatios.DIS,
+      ratio: peRatios.DIS,
+      symbol: "DIS",
+    },
+    {
+      alt: "google logo",
+      icon: "google",
+      peRatio: peRatios.GOOGL,
+      ratio: peRatios.GOOGL,
+      symbol: "GOOGL",
+    },
+    {
+      alt: "netflix logo",
+      icon: "netflix",
+      peRatio: peRatios.NFLX,
+      ratio: peRatios.NFLX,
+      symbol: "NFLX",
+    },
+    {
+      alt: "intel logo",
+      icon: "intel",
+      peRatio: peRatios.INTC,
+      ratio: peRatios.INTC,
+      symbol: "INTC",
+    },
+  ];
+
+  const shownList = markerList.reduce((list: Array<MarkerProps>, marker) => {
+    if (marker?.peRatio === null) return list;
+
+    const someConflict = list.some(
+      (shownMarker) => Math.abs(shownMarker.peRatio - marker.peRatio) < 4,
+    );
+
+    if (someConflict) {
+      return list;
+    }
+
+    return [...list, marker];
+  }, []);
+
+  return (
+    <>
+      {shownList.map((marker) => {
+        return (
+          <Marker
+            key={marker.symbol}
+            icon={marker.icon}
+            peRatio={marker.peRatio}
+            ratio={linearFromLog(marker.peRatio)}
+            symbol={marker.symbol}
+          />
+        );
+      })}
+    </>
+  );
+};
 
 const monetaryPremiumMin = 1;
 const monetaryPremiumMax = 20;
@@ -146,6 +242,9 @@ const calcProjectedPrice = (
   return earningsPerShare * peRatio * monetaryPremium;
 };
 
+// This component needs to be rewritten for the PEs to be an ordered list where
+// anything that is too close to the last item in the list is skipped. An
+// example can be found in the 200Y equilibrium widget.
 const PriceModel: FC = () => {
   const peRatios = usePeRatios();
   const burnRates = useBurnRates();
@@ -159,6 +258,7 @@ const PriceModel: FC = () => {
   const [initialPeSet, setInitialPeSet] = useState(false);
   const averageEthPrice = useAverageEthPrice()?.all;
   const [ethPeRatio, setEthPeRatio] = useState<number>();
+  const posIssuanceYear = usePosIssuanceYear();
 
   const annualizedRevenue =
     burnRateAll === undefined || averageEthPrice === undefined
@@ -167,7 +267,7 @@ const PriceModel: FC = () => {
   const annualizedCosts =
     averageEthPrice === undefined
       ? undefined
-      : StaticEtherData.posIssuanceYear * averageEthPrice;
+      : posIssuanceYear * averageEthPrice;
   const annualizedEarnings =
     annualizedRevenue === undefined || annualizedCosts === undefined
       ? undefined
@@ -252,67 +352,9 @@ const PriceModel: FC = () => {
               value={peRatioPosition}
             />
             <div className="absolute top-3 w-full select-none">
-              {peRatios !== undefined && (
+              {peRatios !== undefined && ethPeRatio !== undefined && (
                 // Because the actual slider does not span the entire visual slider, overlaying an element and setting the left is not perfect. We manually adjust values to match the slider more precisely. To improve this look into off-the-shelf components that allow for styled markers.
-                <>
-                  <Marker
-                    alt="intel logo"
-                    icon="intel"
-                    peRatio={peRatios.INTC}
-                    ratio={linearFromLog(peRatios.INTC)}
-                    symbol="INTC"
-                  />
-                  {ethPeRatio === undefined ||
-                    (ethPeRatio - peRatios.GOOGL > 4 && (
-                      <Marker
-                        alt="google logo"
-                        icon="google"
-                        peRatio={peRatios.GOOGL}
-                        ratio={linearFromLog(peRatios.GOOGL)}
-                        symbol="GOOGL"
-                      />
-                    ))}
-                  {/* <Marker */}
-                  {/*   alt="netflix logo" */}
-                  {/*   icon="netflix" */}
-                  {/*   peRatio={peRatios.NFLX} */}
-                  {/*   ratio={linearFromLog(peRatios.NFLX)} */}
-                  {/*   symbol="NFLX" */}
-                  {/* /> */}
-                  {ethPeRatio === undefined ? null : (
-                    <Marker
-                      alt="ethereum logo"
-                      icon="eth"
-                      peRatio={ethPeRatio}
-                      ratio={linearFromLog(ethPeRatio)}
-                    />
-                  )}
-
-                  {ethPeRatio === undefined ||
-                    (peRatios.AMZN - ethPeRatio > 4 && (
-                      <Marker
-                        alt="amazon logo"
-                        icon="amazon"
-                        peRatio={peRatios.AMZN}
-                        ratio={linearFromLog(peRatios.AMZN)}
-                        symbol="AMZN"
-                      />
-                    ))}
-                  <Marker
-                    alt="disney logo"
-                    icon="disney"
-                    peRatio={peRatios.DIS}
-                    ratio={linearFromLog(peRatios.DIS)}
-                    symbol="DIS"
-                  />
-                  <Marker
-                    alt="tesla logo"
-                    icon="tesla"
-                    peRatio={peRatios.TSLA}
-                    ratio={linearFromLog(peRatios.TSLA)}
-                    symbol="TSLA"
-                  />
-                </>
+                <CompanyMarkers peRatios={{ ...peRatios, ETH: ethPeRatio }} />
               )}
             </div>
           </div>
@@ -357,7 +399,7 @@ const PriceModel: FC = () => {
                   transform: `translateX(47.5%)`,
                 }}
               >
-                <div className="mb-3 w-3 -translate-x-1/2 bg-blue-shipcove [min-height:3px]"></div>
+                <div className="mb-3 w-3 -translate-x-1/2 bg-slateus-400 [min-height:3px]"></div>
                 <div className="pointer-events-auto absolute top-4 -translate-x-1/2">
                   <img
                     title="gold"

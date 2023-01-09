@@ -1,6 +1,6 @@
 import { captureException } from "@sentry/nextjs";
-import type { StaticImageData } from "next/image";
-import Image from "next/image";
+import type { StaticImageData } from "next/legacy/image";
+import Image from "next/legacy/image";
 import type {
   ChangeEvent,
   CSSProperties,
@@ -63,8 +63,11 @@ type ClaimPoapTooltipProps = {
   onClickClose?: () => void;
 };
 
-const TooltipText: FC<{ children: ReactNode }> = ({ children }) => (
-  <BaseText font="font-inter" size="text-base" inline={false}>
+const TooltipText: FC<{ children: ReactNode; inline?: boolean }> = ({
+  children,
+  inline = false,
+}) => (
+  <BaseText font="font-inter" size="text-base" inline={inline}>
     {children}
   </BaseText>
 );
@@ -80,7 +83,7 @@ const ClaimPoapTooltip: FC<ClaimPoapTooltipProps> = ({
     className={`
       relative flex max-h-[95vh] flex-col gap-y-4
       overflow-hidden rounded-lg border
-      border-blue-shipcove bg-blue-tangaroa
+      border-slateus-400 bg-slateus-700
       p-8
       text-left
       md:max-h-[90vh]
@@ -120,9 +123,12 @@ const ClaimPoapTooltip: FC<ClaimPoapTooltipProps> = ({
         POAP is a small reward for early meme spreaders.
       </TooltipText>
       <LabelText>eligibility</LabelText>
-      <TooltipText>
-        There are only 1,559 POAPs. Pre-merge fam accounts with 8+ fam followers
-        are eligible.
+      <TooltipText inline={true}>
+        <ul className="list-inside list-decimal">
+          <li>Part of the fam pre-merge.</li>
+          <li>Had 8+ fam followers in a recent snapshot.</li>
+          <li>One of the first 1,559 to claim.</li>
+        </ul>
       </TooltipText>
       <LabelText>Fam</LabelText>
       <Twemoji wrapper imageClassName="inline-block align-middle h-4 ml-1">
@@ -320,7 +326,10 @@ const ClaimPoap: FC<{
   return (
     <>
       <WidgetBackground
-        className={`flex max-w-3xl flex-col justify-between ${className}`}
+        className={`
+          flex max-w-3xl flex-col justify-between
+          ${className}
+        `}
       >
         <div className="relative flex items-start justify-between">
           <div
@@ -629,6 +638,9 @@ type RowProps = {
 
 const Row: FC<RowProps> = ({ data, style = {}, index, className = "" }) => {
   const fam = data[index];
+  if (fam === undefined) {
+    return <div>row unavailable</div>;
+  }
 
   return (
     <li
@@ -662,7 +674,8 @@ const Row: FC<RowProps> = ({ data, style = {}, index, className = "" }) => {
       <Claimed
         isLoading={false}
         claimedOn={fam.claimed_on ?? undefined}
-        monkey={monkeySvgs[index % 3]}
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        monkey={monkeySvgs[index % 3]!}
       />
     </li>
   );

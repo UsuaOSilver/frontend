@@ -1,26 +1,19 @@
-import JSBI from "jsbi";
 import type { FC } from "react";
 import { useState } from "react";
-import { useEthSupply } from "../../api/eth-supply";
-import { getDateTimeFromSlot } from "../../beacon-time";
-import UpdatedAgo from "../UpdatedAgo";
-import { WidgetBackground, WidgetTitle } from "../WidgetSubcomponents";
-import WidgetErrorBoundary from "../WidgetErrorBoundary";
-import CurrentSupplyTooltip from "./CurrentSupplyTooltip";
+import { ethSupplyFromParts, useSupplyParts } from "../../api/eth-supply";
+import { dateTimeFromSlot } from "../../beacon-time";
 import Nerd from "../Nerd";
+import HoverTooltip from "../HoverTooltip";
+import UpdatedAgo from "../UpdatedAgo";
+import WidgetErrorBoundary from "../WidgetErrorBoundary";
+import { WidgetBackground, WidgetTitle } from "../WidgetSubcomponents";
+import CurrentSupplyTooltip from "./CurrentSupplyTooltip";
 import PreciseEth from "./PreciseEth";
 
 const EthSupplyWidget: FC = () => {
-  const ethSupply = useEthSupply();
+  const ethSupplyParts = useSupplyParts();
+  const ethSupply = ethSupplyFromParts(ethSupplyParts);
   const [showNerdTooltip, setShowNerdTooltip] = useState(false);
-
-  const ethSupplySum = JSBI.subtract(
-    JSBI.add(
-      ethSupply.executionBalancesSum.balancesSum,
-      ethSupply.beaconBalancesSum.balancesSum,
-    ),
-    ethSupply.beaconDepositsSum.depositsSum,
-  );
 
   return (
     <WidgetErrorBoundary title="current supply">
@@ -36,28 +29,33 @@ const EthSupplyWidget: FC = () => {
             onClick={() => setShowNerdTooltip(true)}
           >
             <WidgetTitle>current supply</WidgetTitle>
-            <Nerd />
+            <HoverTooltip
+              customAlign="-left-16"
+              text="learn how the current supply is calculated"
+            >
+              <Nerd />
+            </HoverTooltip>
           </div>
           <div
             className={`
-              tooltip ${showNerdTooltip ? "block" : "hidden"} w-[calc(100%
-              + 96px)] fixed top-1/2
-              left-1/2 z-30 -translate-x-1/2
-              -translate-y-1/2
+              tooltip
+              w-[calc(100% + 96px)] fixed top-1/2
+              left-1/2 z-30 -translate-x-1/2 -translate-y-1/2
               cursor-auto
               whitespace-nowrap
+              ${showNerdTooltip ? "block" : "hidden"}
             `}
           >
             <CurrentSupplyTooltip
-              ethSupply={ethSupply}
+              ethSupply={ethSupplyParts}
               onClickClose={() => setShowNerdTooltip(false)}
             />
           </div>
-          <div className="flex flex-col gap-y-4">
-            <PreciseEth>{ethSupplySum}</PreciseEth>
+          <div className="flex flex-col gap-y-4 transition-colors">
+            <PreciseEth amount={ethSupply} />
             <UpdatedAgo
-              updatedAt={getDateTimeFromSlot(
-                ethSupply.beaconDepositsSum.slot,
+              updatedAt={dateTimeFromSlot(
+                ethSupplyParts.beaconDepositsSum.slot,
               ).toISOString()}
             />
           </div>

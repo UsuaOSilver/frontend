@@ -1,5 +1,5 @@
-import type { StaticImageData } from "next/image";
-import Image from "next/image";
+import type { StaticImageData } from "next/legacy/image";
+import Image from "next/legacy/image";
 import Link from "next/link";
 import type {
   ChangeEvent,
@@ -158,7 +158,7 @@ const JoinDiscordWidget: FC<{
             <TwitterStatusText status={twitterAuthStatus} />
           </div>
           {twitterAuthStatus.type !== "authenticated" ? (
-            <Link href="/api/auth/twitter">
+            <Link href="/api/auth/twitter" legacyBehavior>
               <a
                 className={`
                     flex select-none gap-x-2 self-center

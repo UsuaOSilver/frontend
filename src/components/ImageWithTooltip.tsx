@@ -1,5 +1,5 @@
-import type { StaticImageData } from "next/image";
-import Image from "next/image";
+import type { StaticImageData } from "next/legacy/image";
+import Image from "next/legacy/image";
 import type { FC, RefObject } from "react";
 import { useCallback, useContext, useRef, useState } from "react";
 import Skeleton from "react-loading-skeleton";
@@ -41,7 +41,7 @@ const ImageWithTooltip: FC<ImageWithTooltipProps> = ({
   return (
     <>
       {!isDoneLoading || previewSkeletons ? (
-        <div className="leading-4 m-2">
+        <div className="m-2 leading-4">
           <Skeleton
             circle={true}
             height={`${height}px`}
@@ -62,9 +62,9 @@ const ImageWithTooltip: FC<ImageWithTooltipProps> = ({
         >
           <Image
             className={`
-              rounded-full
-              active:brightness-125 md:active:brightness-100
-              cursor-pointer md:cursor-auto
+              cursor-pointer
+              rounded-full active:brightness-125
+              md:cursor-auto md:active:brightness-100
               ${onMouseEnter !== undefined ? "hover:opacity-60" : ""}
             `}
             src={imgSrc ?? (questionMarkSvg as StaticImageData)}

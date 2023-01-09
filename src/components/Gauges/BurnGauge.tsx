@@ -28,17 +28,17 @@ const BurnGauge: FC<BurnGaugeProps> = ({ timeFrame, unit }) => {
   return (
     <div
       className={`
-        flex flex-col justify-start items-center
-        bg-blue-tangaroa
-        px-4 md:px-0 py-8 pt-7
-        rounded-lg md:rounded-none md:rounded-tl-lg
+        flex flex-col items-center justify-start
+        rounded-lg
+        bg-slateus-700 px-4 pb-4 pt-7
+        md:rounded-none md:rounded-tl-lg md:px-0
       `}
     >
       <IssuanceBurnBaseGauge
         emoji="flame"
         gaugeUnit={unit === "eth" ? "K" : "B"}
         gradientFill="orange"
-        needleColor={colors.fireOrange}
+        needleColor={colors.orange400}
         title="burn"
         unit={unit}
         value={burnRate}

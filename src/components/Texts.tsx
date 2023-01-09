@@ -26,7 +26,7 @@ export const UnitText: FC<{ children: string; className?: string }> = ({
   <BaseText
     font="font-roboto"
     weight="font-extralight"
-    className={`font-extralight text-blue-spindle ${className}`}
+    className={`font-extralight text-slateus-200 ${className}`}
   >
     {children}
   </BaseText>
@@ -86,6 +86,7 @@ export const TimeFrameText: FC<{ children: ReactNode; className?: string }> = ({
     className={`tracking-widest ${className}`}
     size="text-xs"
     font="font-roboto"
+    weight="font-normal"
   >
     {children}
   </BaseText>

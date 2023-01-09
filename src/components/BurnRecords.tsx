@@ -10,10 +10,11 @@ import {
 import * as Format from "../format";
 import scrollbarStyles from "../styles/Scrollbar.module.scss";
 import type { TimeFrameNext } from "../time-frames";
+import { timeFrameFromNext } from "../time-frames";
 import { MoneyAmountAnimated } from "./Amount";
 import SpanMoji from "./SpanMoji";
 import { BaseText } from "./Texts";
-import BodyText from "./TextsNext/BodyText";
+import SkeletonText from "./TextsNext/SkeletonText";
 import { BurnGroupBase } from "./WidgetSubcomponents";
 
 const formatBlockNumber = (u: unknown): string | undefined =>
@@ -45,14 +46,16 @@ const Age: FC<{ minedAt: Date | undefined }> = ({ minedAt }) => {
   }, [minedAt]);
 
   return (
-    <BodyText skeletonWidth="6rem">
-      {age === undefined ? undefined : (
-        <>
-          <BaseText font="font-roboto">{age}</BaseText>
-          {" ago"}
-        </>
-      )}
-    </BodyText>
+    <BaseText font="font-inter" size="text-base md:text-lg">
+      <SkeletonText width="6rem">
+        {age === undefined ? undefined : (
+          <>
+            <BaseText font="font-roboto">{age}</BaseText>
+            {" ago"}
+          </>
+        )}
+      </SkeletonText>
+    </BaseText>
   );
 };
 
@@ -68,7 +71,7 @@ const BurnRecords: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
   const timeFrameRecords =
     burnRecords === undefined
       ? (new Array(10).fill({}) as Partial<BurnRecord>[])
-      : burnRecords[timeFrame];
+      : burnRecords[timeFrameFromNext(timeFrame)];
 
   return (
     <BurnGroupBase
@@ -102,7 +105,8 @@ const BurnRecords: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
               </MoneyAmountAnimated>
               <SpanMoji
                 className="select-none text-2xl md:text-3xl"
-                emoji={emojiMap[index]}
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                emoji={emojiMap[index]!}
               />
             </div>
             <div className="flex justify-between">
@@ -111,7 +115,7 @@ const BurnRecords: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
                 target="_blank"
                 rel="noreferrer"
               >
-                <span className="link-animation font-roboto font-light text-blue-shipcove hover:opacity-60 md:text-lg">
+                <span className="link-animation font-roboto font-light text-slateus-400 hover:opacity-60 md:text-lg">
                   {formatBlockNumber(record.blockNumber) || (
                     <Skeleton width="8rem" />
                   )}

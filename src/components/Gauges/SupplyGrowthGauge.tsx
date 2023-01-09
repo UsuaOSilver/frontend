@@ -6,7 +6,7 @@ import { animated, config, useSpring } from "react-spring";
 import { useBurnRates } from "../../api/burn-rates";
 import type { BurnRates } from "../../api/grouped-analysis-1";
 import { useScarcity } from "../../api/scarcity";
-import colors from "../../colors";
+import { usePosIssuanceYear } from "../../eth-units";
 import { FeatureFlagsContext } from "../../feature-flags";
 import * as Format from "../../format";
 import * as StaticEtherData from "../../static-ether-data";
@@ -23,6 +23,7 @@ const useGrowthRate = (
 ): number | undefined => {
   const scarcity = useScarcity();
   const [growthRate, setGrowthRate] = useState<number>();
+  const posIssuanceYear = usePosIssuanceYear();
 
   useEffect(() => {
     if (scarcity === undefined || burnRates === undefined) {
@@ -36,7 +37,7 @@ const useGrowthRate = (
 
     const issuanceRate = simulateProofOfWork
       ? StaticEtherData.powIssuanceYear
-      : StaticEtherData.posIssuanceYear;
+      : posIssuanceYear;
 
     const nextGrowthRate =
       scarcity.ethSupply === undefined
@@ -52,7 +53,14 @@ const useGrowthRate = (
     if (rateRounded !== undefined && rateRounded !== nextGrowthRate) {
       setGrowthRate(rateRounded);
     }
-  }, [burnRates, growthRate, scarcity, simulateProofOfWork, timeFrame]);
+  }, [
+    burnRates,
+    growthRate,
+    posIssuanceYear,
+    scarcity,
+    simulateProofOfWork,
+    timeFrame,
+  ]);
 
   return growthRate;
 };
@@ -98,17 +106,16 @@ const SupplyGrowthGauge: FC<Props> = ({
 
   return (
     <div
-      // HACK: on tablet the growth gauge is a different height from the burn and issuance gauges so we do some nasty margin hacking to try and align them.
       className={`
-        -mb-[4px] flex flex-col items-center
+        flex flex-col items-center
         justify-start
-        rounded-tl-lg rounded-tr-lg bg-blue-tangaroa px-4
-        py-8 pt-7 pb-[36px]
+        rounded-tl-lg rounded-tr-lg bg-slateus-700 px-4
+        pb-4 pt-7
         md:rounded-none md:px-0
       `}
     >
       <WidgetTitle>supply growth</WidgetTitle>
-      <div className="mt-8 md:scale-90 lg:scale-100">
+      <div className="mt-6 md:scale-90 lg:scale-100">
         <SplitGaugeSvg max={max} progress={progress} />
         <animated.div
           className={`
@@ -136,7 +143,7 @@ const SupplyGrowthGauge: FC<Props> = ({
           )}
         </animated.div>
       </div>
-      <p className="mt-[7px] mb-2.5 select-none font-roboto text-xs font-light text-blue-spindle">
+      <p className="mt-[7px] mb-2.5 select-none font-roboto text-xs font-light text-slateus-200">
         /year
       </p>
       <div className="flex h-6 items-center">

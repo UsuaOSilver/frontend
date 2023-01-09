@@ -9,6 +9,7 @@ import { WEI_PER_ETH } from "../eth-units";
 import { FeatureFlagsContext } from "../feature-flags";
 import * as Format from "../format";
 import type { TimeFrameNext } from "../time-frames";
+import { timeFrameFromNext } from "../time-frames";
 import { MoneyAmount } from "./Amount";
 import { BaseText } from "./Texts";
 import BodyText from "./TextsNext/BodyText";
@@ -101,7 +102,7 @@ const CategorySegment: FC<CategorySegmentProps> = ({
       </>
     )}
     <div
-      className={`color-animation h-2 w-full bg-blue-spindle ${
+      className={`color-animation h-2 w-full bg-slateus-200 ${
         rounded === "left"
           ? "rounded-l-full"
           : rounded === "right"
@@ -109,7 +110,7 @@ const CategorySegment: FC<CategorySegmentProps> = ({
           : ""
       }`}
       style={{
-        backgroundColor: showHighlight ? Colors.white : Colors.spindle,
+        backgroundColor: showHighlight ? Colors.white : Colors.slateus200,
       }}
     ></div>
     <div style={{ marginTop: "9px" }}>
@@ -124,7 +125,7 @@ const CategorySegment: FC<CategorySegmentProps> = ({
               : "visible"
           }`}
           style={{
-            color: showHighlight ? Colors.white : Colors.spindle,
+            color: showHighlight ? Colors.white : Colors.slateus200,
           }}
         >
           {Format.formatZeroDecimals(
@@ -139,7 +140,7 @@ const CategorySegment: FC<CategorySegmentProps> = ({
 
 const CategoryBar: FC<CategoryBarProps> = ({ nft, defi, mev, l2, misc }) => (
   <div className="relative flex items-center py-4">
-    <div className="color-animation absolute h-2 w-full rounded-full bg-blue-highlightbg"></div>
+    <div className="color-animation absolute h-2 w-full rounded-full bg-slateus-600"></div>
     <div className="top-0 left-0 z-10 flex w-full flex-row items-center">
       {nft && (
         <CategorySegment
@@ -151,7 +152,7 @@ const CategoryBar: FC<CategoryBarProps> = ({ nft, defi, mev, l2, misc }) => (
           showHighlight={nft.showHighlight}
         />
       )}
-      <div className="h-2 w-0.5 bg-blue-dusk"></div>
+      <div className="h-2 w-0.5 bg-slateus-500"></div>
       {defi && (
         <CategorySegment
           imgAlt={defi.imgAlt}
@@ -161,7 +162,7 @@ const CategoryBar: FC<CategoryBarProps> = ({ nft, defi, mev, l2, misc }) => (
           showHighlight={defi.showHighlight}
         />
       )}
-      <div className="h-2 w-0.5 bg-blue-dusk"></div>
+      <div className="h-2 w-0.5 bg-slateus-500"></div>
       {mev && (
         <CategorySegment
           imgAlt={mev.imgAlt}
@@ -171,7 +172,7 @@ const CategoryBar: FC<CategoryBarProps> = ({ nft, defi, mev, l2, misc }) => (
           showHighlight={mev.showHighlight}
         />
       )}
-      <div className="h-2 w-0.5 bg-blue-dusk"></div>
+      <div className="h-2 w-0.5 bg-slateus-500"></div>
       {l2 && (
         <CategorySegment
           imgAlt={l2.imgAlt}
@@ -181,7 +182,7 @@ const CategoryBar: FC<CategoryBarProps> = ({ nft, defi, mev, l2, misc }) => (
           showHighlight={l2.showHighlight}
         />
       )}
-      <div className="h-2 w-0.5 bg-blue-dusk"></div>
+      <div className="h-2 w-0.5 bg-slateus-500"></div>
       {misc && (
         <CategorySegment
           imgAlt={misc.imgAlt}
@@ -361,7 +362,7 @@ const BurnCategoryWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
   const [hoveringUncategorized, setHoveringUncategorized] = useState(false);
   const { showCategoryCounts } = useContext(FeatureFlagsContext);
 
-  const selectedBurnCategories = burnCategories?.[timeFrame];
+  const selectedBurnCategories = burnCategories?.[timeFrameFromNext(timeFrame)];
 
   const nft = selectedBurnCategories?.find(
     ({ category }) => category === "nft",
@@ -435,7 +436,9 @@ const BurnCategoryWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
     >
       <div
         className={`${
-          timeFrame === "m5" || timeFrame === "all" ? "hidden" : "visible"
+          timeFrame === "m5" || timeFrame === "since_burn"
+            ? "hidden"
+            : "visible"
         }`}
       >
         <CategoryBar
@@ -451,16 +454,16 @@ const BurnCategoryWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
         <div
           className={`
             flex min-h-[324px] w-full items-center justify-center
-            text-center text-lg text-blue-spindle
+            text-center text-lg text-slateus-200
           `}
         >
           5 minute time frame unavailable
         </div>
-      ) : timeFrame === "all" ? (
+      ) : timeFrame === "since_burn" ? (
         <div
           className={`
             flex min-h-[324px] w-full items-center justify-center
-            text-center text-lg text-blue-spindle
+            text-center text-lg text-slateus-200
           `}
         >
           all time frame unavailable, data sync in progress...

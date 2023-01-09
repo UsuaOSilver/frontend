@@ -11,11 +11,12 @@ import { useActiveBreakpoint } from "../../utils/use-active-breakpoint";
 import { AmountBillionsUsdAnimated } from "../Amount";
 import AdminControls from "../AdminControls";
 import ImageWithTooltip from "../ImageWithTooltip";
-import StyledLink from "../StyledLink";
+import DefaultLink from "../DefaultLink";
 import Modal from "../Modal";
 import BodyText from "../TextsNext/BodyText";
 import FamTooltip from "../FamTooltip";
 import { WidgetBackground, WidgetTitle } from "../WidgetSubcomponents";
+import SkeletonText from "../TextsNext/SkeletonText";
 
 type TvsLeaderboardProps = {
   className?: HTMLAttributes<HTMLDivElement>["className"];
@@ -115,7 +116,8 @@ const TvsLeaderboard: FC<TvsLeaderboardProps> = ({
 
   const leaderboardSkeletons = new Array(100).fill({}) as undefined[];
 
-  const addresses = rows?.map((row) => row.contractAddresses[0]);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const addresses = rows?.map((row) => row.contractAddresses[0]!);
   const freshnessMap = useContractsFreshness(addresses, adminToken);
   const { showMetadataTools } = useContext(FeatureFlagsContext);
 
@@ -158,18 +160,20 @@ const TvsLeaderboard: FC<TvsLeaderboardProps> = ({
                   height={32}
                   width={32}
                 />
-                <StyledLink
+                <DefaultLink
                   className="ml-4 flex w-full justify-between overflow-hidden"
                   href={row?.coinGeckoUrl || row?.nftGoUrl}
                 >
-                  <BodyText skeletonWidth="6rem" className="truncate">
-                    {row?.name?.split(":")[0]}
+                  <BodyText className="truncate">
+                    <SkeletonText width="6rem">
+                      {row?.name?.split(":")[0]}
+                    </SkeletonText>
                   </BodyText>
                   <BodyText
                     className={`
                       ml-2 mr-auto hidden
                       pr-2 font-extralight uppercase
-                      text-blue-shipcove ${
+                      text-slateus-400 ${
                         row?.detail !== undefined ? "md:inline" : ""
                       }
                     `}
@@ -185,17 +189,17 @@ const TvsLeaderboard: FC<TvsLeaderboardProps> = ({
                   >
                     {row?.marketCap}
                   </AmountBillionsUsdAnimated>
-                </StyledLink>
+                </DefaultLink>
               </li>
               {adminToken !== undefined &&
                 row !== undefined &&
                 freshnessMap !== undefined &&
                 showMetadataTools && (
                   <AdminControls
-                    address={row.contractAddresses[0]}
+                    address={row.contractAddresses[0]!}
                     freshness={
                       row !== undefined
-                        ? freshnessMap[row.contractAddresses[0]]
+                        ? freshnessMap[row.contractAddresses[0]!]
                         : undefined
                     }
                   />

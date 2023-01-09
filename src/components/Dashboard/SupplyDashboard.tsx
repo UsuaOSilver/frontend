@@ -1,25 +1,63 @@
 import dynamic from "next/dynamic";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
-import SupplyChange from "../SupplyChange";
+import SupplyChange from "../SupplyChangeWidget";
 import BasicErrorBoundary from "../BasicErrorBoundary";
-import type { EthNumber } from "../../eth-units";
+import { EthNumber, usePosIssuancePerDay } from "../../eth-units";
 import type { JsTimestamp } from "../../time";
 import CurrentSupplyWidget from "../CurrentSupplyWidget";
-import GaugeWidget from "../GaugeWidget";
 import type { TimeFrameNext } from "../../time-frames";
-const EthSupplyWidget = dynamic(() => import("../EthSupplyWidget"));
+import { useIssuanceEstimate } from "../../api/issuance-estimate";
 export type SupplyPoint = [JsTimestamp, EthNumber];
 
-const SupplySection: FC<{
+const EthSupplyWidget = dynamic(() => import("../EthSupplyWidget"));
+// On Safari SSR rendering the animated SVG gauge paths causes a hydration error.
+const GaugeWidget = dynamic(() => import("../GaugeWidget"), { ssr: false });
+
+const limitedTimeFramesWithMerge = [
+  "m5",
+  "h1",
+  "d1",
+  "d7",
+  "d30",
+  "since_merge",
+] as const;
+export type LimitedTimeFrameWithMerge =
+  typeof limitedTimeFramesWithMerge[number];
+
+const getNextTimeFrame = (
+  timeFrame: LimitedTimeFrameWithMerge,
+): LimitedTimeFrameWithMerge => {
+  const nextIndex =
+    (limitedTimeFramesWithMerge.indexOf(timeFrame) + 1) %
+    limitedTimeFramesWithMerge.length;
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return limitedTimeFramesWithMerge[nextIndex]!;
+};
+
+type Props = {
   onClickTimeFrame: () => void;
   onSetTimeFrame: (timeFrame: TimeFrameNext) => void;
   timeFrame: TimeFrameNext;
-}> = ({ timeFrame, onClickTimeFrame, onSetTimeFrame }) => {
+};
+
+const SupplyDashboard: FC<Props> = ({
+  timeFrame,
+  onClickTimeFrame,
+  onSetTimeFrame,
+}) => {
+  const posIssuancePerDay = usePosIssuancePerDay();
   const [simulateProofOfWork, setSimulateProofOfWork] = useState(false);
+  const [supplyTimeFrame, setSupplyTimeFrame] =
+    useState<LimitedTimeFrameWithMerge>("since_merge");
 
   const handleSimulateProofOfWork = useCallback(() => {
     setSimulateProofOfWork((simulateProofOfWork) => !simulateProofOfWork);
+  }, []);
+
+  const handleClickSupplyTimeFrame = useCallback(() => {
+    setSupplyTimeFrame((timeFrame) => getNextTimeFrame(timeFrame));
   }, []);
 
   return (
@@ -33,12 +71,17 @@ const SupplySection: FC<{
             <EthSupplyWidget
               simulateProofOfWork={simulateProofOfWork}
               onSimulateProofOfWork={handleSimulateProofOfWork}
+              onClickTimeFrame={handleClickSupplyTimeFrame}
+              timeFrame={supplyTimeFrame}
             />
           </div>
           <div className="flex flex-col gap-y-4 lg:w-1/2">
             <SupplyChange
               simulateProofOfWork={simulateProofOfWork}
               onSimulateProofOfWork={handleSimulateProofOfWork}
+              onClickTimeFrame={handleClickSupplyTimeFrame}
+              timeFrame={supplyTimeFrame}
+              posIssuancePerDay={posIssuancePerDay}
             />
             <CurrentSupplyWidget />
           </div>
@@ -55,4 +98,4 @@ const SupplySection: FC<{
   );
 };
 
-export default SupplySection;
+export default SupplyDashboard;

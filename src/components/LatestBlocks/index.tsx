@@ -18,6 +18,7 @@ import BodyTextV2 from "../TextsNext/BodyTextV2";
 import LabelText from "../TextsNext/LabelText";
 import SkeletonText from "../TextsNext/SkeletonText";
 import { WidgetBackground, WidgetTitle } from "../WidgetSubcomponents";
+import _first from "lodash/first";
 
 const maxBlocks = 20;
 
@@ -58,9 +59,11 @@ const LatestBlockAge: FC = () => {
       return;
     }
 
-    const latestMinedBlockDate = new Date(
-      groupedAnalysis1.latestBlockFees[0].minedAt,
-    );
+    const lastBlock = _first(groupedAnalysis1.latestBlockFees);
+    if (lastBlock === undefined) {
+      return;
+    }
+    const latestMinedBlockDate = new Date(lastBlock?.minedAt);
 
     setTimeElapsed(
       DateFns.differenceInSeconds(new Date(), latestMinedBlockDate),
@@ -124,7 +127,7 @@ const LatestBlockComponent: FC<{
           </BaseText>
           <div className="hidden md:inline">
             <span className="font-inter">&thinsp;</span>
-            <span className="font-roboto font-extralight text-blue-spindle">
+            <span className="font-roboto font-extralight text-slateus-200">
               Gwei
             </span>
           </div>
@@ -136,7 +139,7 @@ const LatestBlockComponent: FC<{
             </SkeletonText>
           </BaseText>
           <AmountUnitSpace />
-          <span className="font-roboto font-extralight text-blue-spindle">
+          <span className="font-roboto font-extralight text-slateus-200">
             {unit === "eth" ? "ETH" : "USD"}
           </span>
         </div>

@@ -21,6 +21,8 @@ import { useOnResize } from "../../utils/use-on-resize";
 import styles from "./TwoYearProjectionChart.module.scss";
 import colors from "../../colors";
 import { LONDON_TIMESTAMP } from "../../hardforks/london";
+import { PARIS_TIMESTAMP } from "../../hardforks/paris";
+import _first from "lodash/first";
 
 if (typeof window !== "undefined") {
   // Initialize highchats annotations module (only on browser, doesn't work on server)
@@ -193,13 +195,31 @@ const SupplyChart: React.FC<Props> = ({
 
     let lastInContractsIterValue: number | undefined = undefined;
 
-    supplyData.forEach(({ t: timestamp, v }, i) => {
+    // Glassnode is currently overcounting ETH after the Paris hardfork as Etherscan was too. Etherscan fixed it. Glassnode not yet, here we manually correct their mistake.
+    supplyData.forEach(({ t: timestamp, v: vMiscounted }, i) => {
+      const dateTime = DateFns.fromUnixTime(timestamp);
+
+      // Glassnode overcounting per day
+      const GLASSNODE_OVERCOUNTING_ETH = ((24 * 60 * 60) / 12) * 2 * 0.99;
+      const daysSinceMerge =
+        DateFns.differenceInDays(dateTime, PARIS_TIMESTAMP) + 1;
+
+      const v = DateFns.isAfter(dateTime, PARIS_TIMESTAMP)
+        ? vMiscounted - GLASSNODE_OVERCOUNTING_ETH * daysSinceMerge
+        : vMiscounted;
+
       // Calculate peak supply
       if (v > (maxSupply || 0)) {
         maxSupply = v;
         peakSupply = null;
       } else if (v < maxSupply! && !peakSupply) {
-        peakSupply = [timestamp, v];
+        const lastPoint = supplyData[i - 1];
+        if (lastPoint === undefined) {
+          throw new Error("cannot calculate peak supply without supply points");
+        }
+        const value =
+          lastPoint.v - (daysSinceMerge - 1) * GLASSNODE_OVERCOUNTING_ETH;
+        peakSupply = [lastPoint.t, value];
       }
 
       // Only render every Nth point for chart performance
@@ -207,8 +227,7 @@ const SupplyChart: React.FC<Props> = ({
         return;
       }
 
-      const date = DateFns.fromUnixTime(timestamp);
-      const dateMillis = DateFns.getTime(date);
+      const dateMillis = DateFns.getTime(dateTime);
 
       // Subtract any staking eth from total supply on that date
       const stakingSupply = stakingByDate[timestamp];
@@ -261,6 +280,11 @@ const SupplyChart: React.FC<Props> = ({
 
     let supplyValue = lastSupplyPoint![1];
     let stakingValue = lastStakingPoint![1];
+    if (stakingValue === undefined) {
+      throw new Error(
+        "cannot calculate projected staking value without staking value",
+      );
+    }
 
     const maxIssuance = estimatedDailyIssuance(chartSettings.projectedStaking);
 
@@ -294,11 +318,21 @@ const SupplyChart: React.FC<Props> = ({
         burn = estimatedDailyFeeBurn(chartSettings.projectedBaseGasPrice);
       }
 
+      if (supplyValue === undefined) {
+        throw new Error("cannot calculate supply split without supply value");
+      }
+
       supplyValue = Math.max(supplyValue + newIssuance - burn, 0);
 
       const nonStakingValue = Math.max(supplyValue - stakingValue, 0);
 
-      let inContractValue = Math.min(lastContractPoint![1], nonStakingValue);
+      if (lastContractPoint === undefined) {
+        throw new Error(
+          "cannot calculate the in contract value without the last contract point",
+        );
+      }
+
+      let inContractValue = Math.min(lastContractPoint[1]!, nonStakingValue);
       let inAddressesValue = nonStakingValue - inContractValue;
       // Make sure ETH in addresses doesn't dip way below ETH in contracts
       if (inAddressesValue < inContractValue * 0.5) {
@@ -592,11 +626,17 @@ const SupplyChart: React.FC<Props> = ({
             );
           }
 
+          const firstPoint = _first(points);
+
+          if (firstPoint === undefined) {
+            return "";
+          }
+
           const isProjected =
-            points[0].series.userOptions.id?.includes("projected");
+            firstPoint.series.userOptions.id?.includes("projected");
 
           const dt = new Date(this.x || 0);
-          const header = `<div class="tt-header"><div class="tt-header-date text-blue-spindle">${formatDate(
+          const header = `<div class="tt-header"><div class="tt-header-date text-slateus-200">${formatDate(
             dt,
           )}</div>${
             isProjected
@@ -625,6 +665,9 @@ const SupplyChart: React.FC<Props> = ({
 
           // Show total supply last
           const total = totalSupplyByDate[this.x || 0];
+          if (total === undefined) {
+            return "";
+          }
           rows.push(
             `<tr class="tt-total-row">
               <td><div class="tt-series-name">${t.total_supply}</div></td>

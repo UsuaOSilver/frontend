@@ -8,8 +8,8 @@ import type { FC } from "react";
 import QuantifyText from "./TextsNext/QuantifyText";
 import { formatOneDecimal, formatTwoDigit } from "../format";
 import { WEI_PER_GWEI } from "../eth-units";
-import type { StaticImageData } from "next/image";
-import Image from "next/image";
+import type { StaticImageData } from "next/legacy/image";
+import Image from "next/legacy/image";
 import batSvg from "../assets/bat-own.svg";
 import speakerSvg from "../assets/speaker-own.svg";
 import barrierSvg from "../assets/barrier-own.svg";
@@ -39,8 +39,12 @@ const formatGasTooltip = (
 ${gasStr} Gwei`;
 };
 
+const getBlockPageLink = (u: unknown): string | undefined =>
+  typeof u === undefined ? undefined : `https://etherscan.io/block/${u}`;
+
 type MarkerProps = {
   barrier: number;
+  blockNumber?: number;
   description?: string;
   emphasize?: boolean;
   gas: number;
@@ -54,6 +58,7 @@ type MarkerProps = {
 
 const Marker: FC<MarkerProps> = ({
   barrier,
+  blockNumber,
   description,
   emphasize = false,
   gas,
@@ -150,14 +155,20 @@ const Marker: FC<MarkerProps> = ({
         size="text-sm"
         unitPostfix={vertical === "top" ? "Gwei" : undefined}
       >
-        <CountUp
-          end={gas / WEI_PER_GWEI}
-          preserveValue
-          formattingFn={formatOneDecimal}
-          duration={1}
-          useEasing
-          decimals={1}
-        />
+        <a
+          href={getBlockPageLink(blockNumber)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <CountUp
+            end={gas / WEI_PER_GWEI}
+            preserveValue
+            formattingFn={formatOneDecimal}
+            duration={1}
+            useEasing
+            decimals={1}
+          />
+        </a>
       </QuantifyText>
       {vertical === "top" && (
         <div className={`mt-2 h-12 w-px rounded-t-full ${markerColor}`}></div>
@@ -260,13 +271,14 @@ const GasMarketWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
               flex
               h-2
               rounded-full
-              bg-blue-highlightbg
+              bg-slateus-600
             `}
           >
             {isDataAvailable && (
               <>
                 <Marker
                   barrier={barrier}
+                  blockNumber={baseFeePerGasStatsTimeFrame.min_block_number}
                   description="minimum gas price"
                   gas={baseFeePerGasStatsTimeFrame.min}
                   highest={highest}
@@ -278,6 +290,7 @@ const GasMarketWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
                 />
                 <Marker
                   barrier={barrier}
+                  blockNumber={baseFeePerGasStatsTimeFrame.max_block_number}
                   description="maximum gas price"
                   gas={baseFeePerGasStatsTimeFrame.max}
                   highest={highest}
@@ -300,7 +313,9 @@ const GasMarketWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
                   }
                   label="average"
                   lowest={lowest}
-                  markerColor={deltaPercent >= 0 ? "bg-orange-400" : "bg-drop"}
+                  markerColor={
+                    deltaPercent >= 0 ? "bg-orange-400" : "bg-blue-400"
+                  }
                   vertical="top"
                 />
                 <Marker
@@ -317,7 +332,7 @@ const GasMarketWidget: FC<Props> = ({ onClickTimeFrame, timeFrame }) => {
                   label="barrier"
                   lowest={lowest}
                   markerColor={
-                    deltaPercent >= 0 ? "bg-orange-400" : "bg-indigo-500"
+                    deltaPercent >= 0 ? "bg-orange-400" : "bg-blue-400"
                   }
                   vertical="top"
                 />

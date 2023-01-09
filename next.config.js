@@ -1,6 +1,6 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
-  enabled: process.env.ANALYZE === "true",
+  enabled: process.env.ANALYZE_BUNDLE === "true",
 });
 
 /** @type {import('next').NextConfig} */
@@ -8,8 +8,12 @@ const nextConfig = withSentryConfig(
   withBundleAnalyzer({
     productionBrowserSourceMaps: true,
     sentry: {
-      disableServerWebpackPlugin: process.env["NEXT_PUBLIC_ENV"] === "dev",
-      disableClientWebpackPlugin: process.env["NEXT_PUBLIC_ENV"] === "dev",
+      disableServerWebpackPlugin:
+        process.env.NEXT_PUBLIC_ENV !== "stag" &&
+        process.env.NEXT_PUBLIC_ENV !== "prod",
+      disableClientWebpackPlugin:
+        process.env.NEXT_PUBLIC_ENV !== "stag" &&
+        process.env.NEXT_PUBLIC_ENV !== "prod",
     },
     output: "standalone",
     reactStrictMode: true,

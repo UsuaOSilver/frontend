@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import React, { useRef } from "react";
 import FirstVidget from "../Vidgets/FirstVidget";
 import SecondVidget from "../Vidgets/SecondVidget";
@@ -23,9 +25,10 @@ const FeeBurnedBlock = () => {
   const stepperPoints = useContext(StepperContext);
   const { hidingNavigationPosition } = useContext(NavigationContext);
   const controlPoints: StepperPoint[] = stepperPoints?.stepperElements
-    ? Object.keys(stepperPoints.stepperElements).map((element) => {
+    ? // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      (Object.keys(stepperPoints.stepperElements).map((element) => {
         return stepperPoints?.stepperElements[element];
-      })
+      }) as StepperPoint[])
     : [];
   const [currentIndexHistorical, setCurrentIndexHistorical] = useState(0);
 
@@ -34,7 +37,7 @@ const FeeBurnedBlock = () => {
     //change data vidgets
     const bodyHeight = document.body.scrollHeight;
     const breackPointShowVidgets =
-      controlPoints[0]?.offsetY - window.innerHeight / 2.4;
+      controlPoints[0]?.offsetY! - window.innerHeight / 2.4;
 
     const showVidgets =
       window.scrollY > breackPointShowVidgets &&
@@ -60,21 +63,21 @@ const FeeBurnedBlock = () => {
     ) {
       setCurrentIndexHistorical(currentIndexData);
     }
-    if (window.scrollY > controlPoints[4]?.offsetY) {
+    if (window.scrollY > controlPoints[4]?.offsetY!) {
       setNumberETHBlock(0);
       setCurrentMoneyType("Deflationary");
       return;
-    } else if (window.scrollY > controlPoints[3]?.offsetY) {
+    } else if (window.scrollY > controlPoints[3]?.offsetY!) {
       setNumberETHBlock(1);
       setCurrentMoneyType("Infationary");
       return;
-    } else if (window.scrollY > controlPoints[2]?.offsetY) {
+    } else if (window.scrollY > controlPoints[2]?.offsetY!) {
       setNumberETHBlock(2);
       return;
-    } else if (window.scrollY > controlPoints[1]?.offsetY) {
+    } else if (window.scrollY > controlPoints[1]?.offsetY!) {
       setNumberETHBlock(3);
       return;
-    } else if (window.scrollY > controlPoints[0]?.offsetY) {
+    } else if (window.scrollY > controlPoints[0]?.offsetY!) {
       setNumberETHBlock(5);
       return;
     }
@@ -92,18 +95,18 @@ const FeeBurnedBlock = () => {
         id="eth-card"
         className={`${
           styles.fixedFeeBurned
-        } fixed z-10 inset-x-0 bottom-0 grid grid-cols-2 gap-1 sm:gap-2 lg:flex lg:flex-nowrap justify-center w-full max-w-screen-2xl md:mx-auto px-2 lg:px-4 lg:gap-4 pb-2 lg:pb-4 ${
+        } fixed inset-x-0 bottom-0 z-10 grid w-full max-w-screen-2xl grid-cols-2 justify-center gap-1 px-2 pb-2 sm:gap-2 md:mx-auto lg:flex lg:flex-nowrap lg:gap-4 lg:px-4 lg:pb-4 ${
           isShow ? styles.active : ""
         }`}
       >
         <FirstVidget
-          date={historicalData[currentIndexHistorical][0]}
+          date={historicalData[currentIndexHistorical]![0]}
           currentMoneyType={currentMoneyType}
         />
         <SecondVidget
           name={t.landing_feeburned_card2_name}
-          cost={historicalData[currentIndexHistorical][1]}
-          number={historicalData[currentIndexHistorical][2]}
+          cost={historicalData[currentIndexHistorical]![1]}
+          number={historicalData[currentIndexHistorical]![2]}
         />
         <ThirdVidget
           numberETHBlock={numberETHBlock}
